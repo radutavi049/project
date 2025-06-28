@@ -19,7 +19,8 @@ import {
   Shield,
   Archive,
   Flag,
-  LogOut
+  LogOut,
+  Crown
 } from 'lucide-react';
 
 export default function ChannelHeader({ 
@@ -35,7 +36,8 @@ export default function ChannelHeader({
   onToggleMute,
   onToggleMembers,
   onOpenInfo,
-  onOpenSettings
+  onOpenSettings,
+  onOpenMemberManager
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
@@ -82,6 +84,13 @@ export default function ChannelHeader({
       label: 'Channel Info',
       action: () => {
         if (onOpenInfo) onOpenInfo();
+      }
+    },
+    {
+      icon: Crown,
+      label: 'Manage Members',
+      action: () => {
+        if (onOpenMemberManager) onOpenMemberManager();
       }
     },
     {

@@ -13,6 +13,7 @@ import ChannelMembers from '@/components/channels/ChannelMembers';
 import ChannelHeader from '@/components/channels/ChannelHeader';
 import ChannelInfoPanel from '@/components/channels/ChannelInfoPanel';
 import AdvancedChannelSettings from '@/components/channels/AdvancedChannelSettings';
+import ChannelMemberManager from '@/components/channels/ChannelMemberManager';
 import { Pin, ArrowUp, X, Reply, Send, PinOff } from 'lucide-react';
 
 export default function ChannelView({ channel, onBack }) {
@@ -35,6 +36,7 @@ export default function ChannelView({ channel, onBack }) {
   const [replyText, setReplyText] = useState('');
   const [showChannelInfo, setShowChannelInfo] = useState(false);
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [showMemberManager, setShowMemberManager] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -667,6 +669,7 @@ export default function ChannelView({ channel, onBack }) {
         onToggleMembers={() => setShowMembers(!showMembers)}
         onOpenInfo={() => setShowChannelInfo(true)}
         onOpenSettings={() => setShowAdvancedSettings(true)}
+        onOpenMemberManager={() => setShowMemberManager(true)}
       />
 
       {/* Search Bar */}
@@ -963,6 +966,20 @@ export default function ChannelView({ channel, onBack }) {
           });
           onBack();
         }}
+      />
+
+      {/* Member Management */}
+      <ChannelMemberManager
+        channel={channel}
+        isOpen={showMemberManager}
+        onClose={() => setShowMemberManager(false)}
+        onUpdateMembers={(members) => {
+          toast({
+            title: "Members Updated! 👥",
+            description: "Channel member list has been updated"
+          });
+        }}
+        currentUserRole="admin"
       />
     </div>
   );
