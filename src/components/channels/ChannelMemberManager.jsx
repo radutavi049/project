@@ -5,30 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { 
-  X, 
-  UserPlus, 
-  Search, 
-  MoreVertical, 
-  Crown, 
-  Shield, 
-  User, 
-  Ban, 
-  Trash2, 
-  Edit, 
-  Copy, 
-  Send,
-  Check,
-  AlertTriangle,
-  Users,
-  Settings,
-  Eye,
-  EyeOff,
-  Volume2,
-  VolumeX,
-  MessageSquare,
-  MessageSquareOff
-} from 'lucide-react';
+import { X, UserPlus, Search, MoreVertical, Crown, Shield, User, Ban, Trash2, Edit, Copy, Send, Check, AlertTriangle, Users, Settings, Eye, EyeOff, Volume2, VolumeX, MessageSquare, MessageSquare as MessageSquareOff } from 'lucide-react';
 
 const memberRoles = [
   { 
