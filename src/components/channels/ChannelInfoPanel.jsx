@@ -90,7 +90,7 @@ export default function ChannelInfoPanel({
   const pinnedMessages = [
     {
       id: 1,
-      content: `Welcome to #${channel.name}! Please read the channel guidelines.`,
+      content: `Welcome to #${channel?.name}! Please read the channel guidelines.`,
       author: 'Alex Chen',
       avatar: '👨‍💻',
       timestamp: '2024-01-15T10:00:00Z'
@@ -137,7 +137,7 @@ export default function ChannelInfoPanel({
   };
 
   const generateInviteLink = () => {
-    const link = `https://securechat.app/invite/${channel.id}/${Math.random().toString(36).substr(2, 9)}`;
+    const link = `https://securechat.app/invite/${channel?.id}/${Math.random().toString(36).substr(2, 9)}`;
     setInviteLink(link);
     setShowInviteModal(true);
   };
@@ -190,10 +190,10 @@ export default function ChannelInfoPanel({
       {/* Channel Header */}
       <div className="text-center pb-6 border-b border-border">
         <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-4xl mx-auto mb-4 shadow-lg">
-          {channel.icon}
+          {channel?.icon}
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">#{channel.name}</h2>
-        <p className="text-muted-foreground mb-4">{channel.description || 'No description available'}</p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">#{channel?.name}</h2>
+        <p className="text-muted-foreground mb-4">{channel?.description || 'No description available'}</p>
         
         <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
@@ -275,7 +275,7 @@ export default function ChannelInfoPanel({
           variant="outline"
           className="flex items-center gap-2"
           onClick={() => {
-            navigator.clipboard.writeText(`#${channel.name}`);
+            navigator.clipboard.writeText(`#${channel?.name}`);
             toast({
               title: "Channel Name Copied! 📋",
               description: "Channel name copied to clipboard"
@@ -492,10 +492,10 @@ export default function ChannelInfoPanel({
           <div className="flex items-center justify-between p-4 border-b border-border bg-card/50 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center text-lg">
-                {channel.icon}
+                {channel?.icon}
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-foreground">#{channel.name}</h2>
+                <h2 className="text-lg font-semibold text-foreground">#{channel?.name}</h2>
                 <p className="text-sm text-muted-foreground">Channel Information</p>
               </div>
             </div>
@@ -561,7 +561,7 @@ export default function ChannelInfoPanel({
               className="bg-card border border-border rounded-lg w-full max-w-md"
             >
               <div className="flex items-center justify-between p-4 border-b border-border">
-                <h3 className="text-lg font-semibold">Invite to #{channel.name}</h3>
+                <h3 className="text-lg font-semibold">Invite to #{channel?.name}</h3>
                 <Button variant="ghost" size="icon" onClick={() => setShowInviteModal(false)}>
                   <X className="w-4 h-4" />
                 </Button>

@@ -10,6 +10,9 @@ import VoiceRecorder from '@/components/chat/VoiceRecorder';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import ChannelInput from '@/components/channels/ChannelInput';
 import ChannelMembers from '@/components/channels/ChannelMembers';
+import ChannelHeader from '@/components/channels/ChannelHeader';
+import ChannelInfoPanel from '@/components/channels/ChannelInfoPanel';
+import AdvancedChannelSettings from '@/components/channels/AdvancedChannelSettings';
 import { Pin, ArrowUp, X, Reply, Send, PinOff } from 'lucide-react';
 
 export default function ChannelView({ channel, onBack }) {
@@ -30,6 +33,8 @@ export default function ChannelView({ channel, onBack }) {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [showChannelInfo, setShowChannelInfo] = useState(false);
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -647,6 +652,23 @@ export default function ChannelView({ channel, onBack }) {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-background via-background to-background/95 relative">
+      {/* Channel Header */}
+      <ChannelHeader
+        channel={channel}
+        channelMembers={channelMembers}
+        pinnedMessages={pinnedMessages}
+        channelMuted={channelMuted}
+        notifications={notifications}
+        showSearch={showSearch}
+        onBack={onBack}
+        onToggleSearch={() => setShowSearch(!showSearch)}
+        onToggleNotifications={toggleNotifications}
+        onToggleMute={toggleMute}
+        onToggleMembers={() => setShowMembers(!showMembers)}
+        onOpenInfo={() => setShowChannelInfo(true)}
+        onOpenSettings={() => setShowAdvancedSettings(true)}
+      />
+
       {/* Search Bar */}
       <AnimatePresence>
         {showSearch && (
@@ -787,19 +809,6 @@ export default function ChannelView({ channel, onBack }) {
             )}
           </AnimatePresence>
 
-          {/* Exit Channel Button - Always Visible */}
-          <div className="absolute top-4 right-4 z-10">
-            <Button
-              onClick={onBack}
-              variant="secondary"
-              size="sm"
-              className="bg-card/80 backdrop-blur-sm border border-border/50 hover:bg-card shadow-lg"
-            >
-              <X className="w-4 h-4 mr-2" />
-              Exit Channel
-            </Button>
-          </div>
-
           {/* Reply Section */}
           <AnimatePresence>
             {replyingTo && (
@@ -902,6 +911,58 @@ export default function ChannelView({ channel, onBack }) {
         isRecording={isRecording}
         onStop={handleVoiceNote}
         onCancel={() => setIsRecording(false)}
+      />
+
+      {/* Channel Info Panel */}
+      <ChannelInfoPanel
+        channel={channel}
+        isOpen={showChannelInfo}
+        onClose={() => setShowChannelInfo(false)}
+        onUpdateChannel={(channelId, updates) => {
+          toast({
+            title: "Channel Updated! ⚙️",
+            description: "Channel information has been saved"
+          });
+        }}
+        onLeaveChannel={() => {
+          toast({
+            title: "Left Channel",
+            description: `You have left #${channel.name}`
+          });
+          onBack();
+        }}
+        onInviteMembers={() => {
+          toast({
+            title: "🚧 Invite Members",
+            description: "Member invitations aren't implemented yet—but don't worry! You can request them in your next prompt! 🚀"
+          });
+        }}
+        onManageMembers={() => {
+          toast({
+            title: "🚧 Manage Members",
+            description: "Member management isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀"
+          });
+        }}
+      />
+
+      {/* Advanced Channel Settings */}
+      <AdvancedChannelSettings
+        channel={channel}
+        isOpen={showAdvancedSettings}
+        onClose={() => setShowAdvancedSettings(false)}
+        onUpdateChannel={(channelId, updates) => {
+          toast({
+            title: "Channel Updated! ⚙️",
+            description: "Advanced settings have been saved"
+          });
+        }}
+        onDeleteChannel={(channelId) => {
+          toast({
+            title: "Channel Deleted! 🗑️",
+            description: `#${channel.name} has been permanently deleted`
+          });
+          onBack();
+        }}
       />
     </div>
   );

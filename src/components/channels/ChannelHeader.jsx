@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -26,7 +25,9 @@ export default function ChannelHeader({
   onToggleSearch,
   onToggleNotifications,
   onToggleMute,
-  onToggleMembers
+  onToggleMembers,
+  onOpenInfo,
+  onOpenSettings
 }) {
   return (
     <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4">
@@ -101,10 +102,7 @@ export default function ChannelHeader({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => toast({
-            title: "🚧 Channel Settings",
-            description: "Channel settings aren't implemented yet—but don't worry! You can request them in your next prompt! 🚀"
-          })}
+          onClick={onOpenSettings}
           className="transition-all duration-200 hover:bg-accent"
         >
           <Settings className="w-4 h-4" />
