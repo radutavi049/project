@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
@@ -38,16 +38,40 @@ export default function ChannelHeader({
   onOpenSettings
 }) {
   const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef(null);
+  const buttonRef = useRef(null);
 
-  const handleMenuClick = (e) => {
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        menuRef.current && 
+        !menuRef.current.contains(event.target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target)
+      ) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [showMenu]);
+
+  const handleMenuToggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Menu clicked, current state:', showMenu); // Debug log
     setShowMenu(!showMenu);
   };
 
   const handleMenuItemClick = (action, label) => {
-    console.log('Menu item clicked:', label); // Debug log
     setShowMenu(false);
     action();
   };
@@ -57,16 +81,14 @@ export default function ChannelHeader({
       icon: Info,
       label: 'Channel Info',
       action: () => {
-        console.log('Opening channel info'); // Debug log
-        onOpenInfo();
+        if (onOpenInfo) onOpenInfo();
       }
     },
     {
       icon: Settings,
       label: 'Channel Settings',
       action: () => {
-        console.log('Opening channel settings'); // Debug log
-        onOpenSettings();
+        if (onOpenSettings) onOpenSettings();
       }
     },
     {
@@ -118,7 +140,7 @@ export default function ChannelHeader({
           title: "Left Channel",
           description: `You have left #${channel?.name}`
         });
-        onBack();
+        if (onBack) onBack();
       },
       destructive: true
     }
@@ -197,59 +219,51 @@ export default function ChannelHeader({
         {/* FIXED: Menu Button with Proper Dropdown */}
         <div className="relative">
           <Button
+            ref={buttonRef}
             variant="ghost"
             size="icon"
-            onClick={handleMenuClick}
+            onClick={handleMenuToggle}
             className={`transition-all duration-200 hover:bg-accent ${showMenu ? 'bg-accent' : ''}`}
           >
             <MoreVertical className="w-4 h-4" />
           </Button>
 
-          {/* FIXED: Dropdown Menu with Proper Z-Index and Event Handling */}
+          {/* CRITICAL FIX: Dropdown Menu with Proper Event Handling */}
           <AnimatePresence>
             {showMenu && (
-              <>
-                {/* Backdrop to close menu - CRITICAL: Proper z-index */}
-                <div 
-                  className="fixed inset-0 z-[9998]" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Backdrop clicked, closing menu'); // Debug log
-                    setShowMenu(false);
-                  }}
-                />
-                
-                {/* Menu Content - CRITICAL: Higher z-index than backdrop */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 z-[9999] bg-card border border-border rounded-lg shadow-xl py-2 min-w-[200px] backdrop-blur-sm"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {menuItems.map((item, index) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={index}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleMenuItemClick(item.action, item.label);
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors text-left ${
-                          item.destructive ? 'text-destructive hover:text-destructive' : 'text-foreground'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4 flex-shrink-0" />
-                        <span>{item.label}</span>
-                      </button>
-                    );
-                  })}
-                </motion.div>
-              </>
+              <motion.div
+                ref={menuRef}
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-full mt-2 z-50 bg-card border border-border rounded-lg shadow-xl py-2 min-w-[200px] backdrop-blur-sm"
+                style={{
+                  position: 'absolute',
+                  zIndex: 50
+                }}
+              >
+                {menuItems.map((item, index) => {
+                  const Icon = item.icon;
+                  return (
+                    <button
+                      key={index}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMenuItemClick(item.action, item.label);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors text-left ${
+                        item.destructive ? 'text-destructive hover:text-destructive' : 'text-foreground'
+                      }`}
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </motion.div>
             )}
           </AnimatePresence>
         </div>

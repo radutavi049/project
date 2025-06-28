@@ -120,7 +120,9 @@ export default function AdvancedChannelSettings({
       return;
     }
 
-    onUpdateChannel(channel?.id, settings);
+    if (onUpdateChannel) {
+      onUpdateChannel(channel?.id, settings);
+    }
     
     toast({
       title: "Channel Updated! ⚙️",
