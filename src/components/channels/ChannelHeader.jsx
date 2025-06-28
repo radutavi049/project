@@ -117,7 +117,7 @@ export default function ChannelHeader({
   ];
 
   return (
-    <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4">
+    <div className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 relative">
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="w-4 h-4" />
@@ -137,7 +137,7 @@ export default function ChannelHeader({
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="w-3 h-3" />
-            <span className="font-medium">{channelMembers?.length} members</span>
+            <span className="font-medium">{channelMembers?.length || 0} members</span>
             {pinnedMessages?.length > 0 && (
               <>
                 <span>•</span>
@@ -192,7 +192,7 @@ export default function ChannelHeader({
             variant="ghost"
             size="icon"
             onClick={() => setShowMenu(!showMenu)}
-            className="transition-all duration-200 hover:bg-accent"
+            className={`transition-all duration-200 hover:bg-accent ${showMenu ? 'bg-accent' : ''}`}
           >
             <MoreVertical className="w-4 h-4" />
           </Button>
@@ -213,7 +213,7 @@ export default function ChannelHeader({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -10 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 z-50 bg-card border border-border rounded-lg shadow-xl py-2 min-w-[200px]"
+                  className="absolute right-0 top-full mt-2 z-50 bg-card border border-border rounded-lg shadow-xl py-2 min-w-[200px] backdrop-blur-sm"
                 >
                   {menuItems.map((item, index) => {
                     const Icon = item.icon;

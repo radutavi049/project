@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Slider } from '@/components/ui/slider';
 import { toast } from '@/components/ui/use-toast';
 import { 
   X, 
@@ -418,7 +417,7 @@ export default function ChannelInfoPanel({
             <Flag className="w-4 h-4 mr-2" />
             Report Channel
           </Button>
-          <Button variant="destructive" className="w-full justify-start">
+          <Button variant="destructive" className="w-full justify-start" onClick={onLeaveChannel}>
             <UserMinus className="w-4 h-4 mr-2" />
             Leave Channel
           </Button>

@@ -120,7 +120,7 @@ export default function AdvancedChannelSettings({
       return;
     }
 
-    onUpdateChannel(channel.id, settings);
+    onUpdateChannel(channel?.id, settings);
     
     toast({
       title: "Channel Updated! ⚙️",
@@ -132,7 +132,7 @@ export default function AdvancedChannelSettings({
 
   const handleDeleteChannel = () => {
     if (onDeleteChannel) {
-      onDeleteChannel(channel.id);
+      onDeleteChannel(channel?.id);
     }
     onClose();
   };
@@ -191,7 +191,7 @@ export default function AdvancedChannelSettings({
           <div className="flex items-center gap-3">
             <Settings className="w-5 h-5" />
             <h3 className="text-lg font-semibold">Advanced Channel Settings</h3>
-            <span className="text-sm text-muted-foreground">#{channel.name}</span>
+            <span className="text-sm text-muted-foreground">#{channel?.name}</span>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={resetToDefaults}>
@@ -741,7 +741,7 @@ export default function AdvancedChannelSettings({
                       <Label className="text-base text-destructive">Are you absolutely sure?</Label>
                       <p className="text-sm text-muted-foreground">
                         This action cannot be undone. This will permanently delete the channel 
-                        <strong> #{channel.name}</strong> and all its messages, settings, and member data.
+                        <strong> #{channel?.name}</strong> and all its messages, settings, and member data.
                       </p>
                     </div>
                   </div>
