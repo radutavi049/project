@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { encryptMessage, decryptMessage } from '@/lib/encryption';
 import { toast } from '@/components/ui/use-toast';
@@ -12,12 +12,22 @@ export function ChatProvider({ children }) {
   const [contacts, setContacts] = useState([]);
   const [typingUsers, setTypingUsers] = useState({});
   const [deletingMessages, setDeletingMessages] = useState(new Set());
+  
+  // CRITICAL FIX: Track auto-delete timers to prevent conflicts
+  const autoDeleteTimers = useRef(new Map());
+  const messageStates = useRef(new Map()); // Track message states
 
   useEffect(() => {
     if (user) {
       loadChats();
       loadContacts();
     }
+    
+    // Cleanup timers on unmount
+    return () => {
+      autoDeleteTimers.current.forEach(timer => clearTimeout(timer));
+      autoDeleteTimers.current.clear();
+    };
   }, [user]);
 
   const loadChats = () => {
@@ -144,6 +154,68 @@ export function ChatProvider({ children }) {
     return newChat;
   };
 
+  // CRITICAL FIX: Improved auto-delete logic
+  const scheduleAutoDelete = (messageId, chatId, deleteTimer) => {
+    // Clear any existing timer for this message
+    if (autoDeleteTimers.current.has(messageId)) {
+      clearTimeout(autoDeleteTimers.current.get(messageId));
+    }
+
+    // Mark message as scheduled for deletion
+    messageStates.current.set(messageId, 'scheduled');
+
+    const timer = setTimeout(() => {
+      // Check if message still exists and is scheduled for deletion
+      if (messageStates.current.get(messageId) === 'scheduled') {
+        messageStates.current.set(messageId, 'deleting');
+        
+        // Add to deleting set to prevent UI flicker
+        setDeletingMessages(prev => new Set(prev).add(messageId));
+        
+        // Small delay to prevent visual glitch
+        setTimeout(() => {
+          deleteMessageInternal(chatId, messageId);
+          
+          // Clean up
+          autoDeleteTimers.current.delete(messageId);
+          messageStates.current.delete(messageId);
+          setDeletingMessages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(messageId);
+            return newSet;
+          });
+        }, 100);
+      }
+    }, deleteTimer);
+
+    autoDeleteTimers.current.set(messageId, timer);
+  };
+
+  // Internal delete function that doesn't trigger state cleanup
+  const deleteMessageInternal = (chatId, messageId) => {
+    setChats(prevChats => {
+      const updatedChats = prevChats.map(c => {
+        if (c.id === chatId) {
+          return {
+            ...c,
+            messages: (c.messages || []).filter(m => m.id !== messageId)
+          };
+        }
+        return c;
+      });
+      
+      saveChats(updatedChats);
+      
+      // Update activeChat if it's the current chat
+      if (activeChat && activeChat.id === chatId) {
+        const updatedActiveChat = updatedChats.find(c => c.id === chatId);
+        setActiveChat(updatedActiveChat);
+      }
+      
+      return updatedChats;
+    });
+  };
+
   const sendMessage = async (chatId, content, type = 'text', metadata = {}) => {
     if (!user || !chatId || !content) return;
 
@@ -171,37 +243,31 @@ export function ChatProvider({ children }) {
         editHistory: []
       };
 
-      const updatedChats = chats.map(c => {
-        if (c.id === chatId) {
-          return {
-            ...c,
-            messages: [...(c.messages || []), message],
-            lastActivity: new Date().toISOString()
-          };
-        }
-        return c;
+      // CRITICAL FIX: Update chats immediately and consistently
+      setChats(prevChats => {
+        const updatedChats = prevChats.map(c => {
+          if (c.id === chatId) {
+            return {
+              ...c,
+              messages: [...(c.messages || []), message],
+              lastActivity: new Date().toISOString()
+            };
+          }
+          return c;
+        });
+
+        saveChats(updatedChats);
+
+        // Update activeChat immediately
+        const updatedActiveChat = updatedChats.find(c => c.id === chatId);
+        setActiveChat(updatedActiveChat);
+
+        return updatedChats;
       });
 
-      setChats(updatedChats);
-      saveChats(updatedChats);
-
-      // Update activeChat so chat UI updates
-      const updatedActiveChat = updatedChats.find(c => c.id === chatId);
-      setActiveChat(updatedActiveChat);
-
-      // Auto-delete message if enabled - but prevent disappearing/reappearing
-      if (message.autoDelete && !deletingMessages.has(messageId)) {
-        setTimeout(() => {
-          setDeletingMessages(prev => new Set(prev).add(messageId));
-          setTimeout(() => {
-            deleteMessage(chatId, messageId);
-            setDeletingMessages(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(messageId);
-              return newSet;
-            });
-          }, 100); // Small delay to prevent flicker
-        }, message.deleteTimer);
+      // CRITICAL FIX: Schedule auto-delete AFTER state update
+      if (message.autoDelete) {
+        scheduleAutoDelete(messageId, chatId, message.deleteTimer);
       }
 
       return message;
@@ -218,6 +284,13 @@ export function ChatProvider({ children }) {
   const editMessage = (chatId, messageId, newContent) => {
     if (!chatId || !messageId || !newContent) return;
 
+    // Cancel auto-delete if message is being edited
+    if (autoDeleteTimers.current.has(messageId)) {
+      clearTimeout(autoDeleteTimers.current.get(messageId));
+      autoDeleteTimers.current.delete(messageId);
+      messageStates.current.delete(messageId);
+    }
+
     const updatedChats = chats.map(c => {
       if (c.id === chatId) {
         return {
@@ -228,6 +301,7 @@ export function ChatProvider({ children }) {
                 ...m,
                 content: newContent,
                 isEdited: true,
+                autoDelete: false, // Disable auto-delete for edited messages
                 editHistory: [...(m.editHistory || []), {
                   content: m.content,
                   timestamp: new Date().toISOString()
@@ -259,23 +333,16 @@ export function ChatProvider({ children }) {
   const deleteMessage = (chatId, messageId) => {
     if (!chatId || !messageId) return;
 
-    const updatedChats = chats.map(c => {
-      if (c.id === chatId) {
-        return {
-          ...c,
-          messages: (c.messages || []).filter(m => m.id !== messageId)
-        };
-      }
-      return c;
-    });
-
-    setChats(updatedChats);
-    saveChats(updatedChats);
-
-    // Update activeChat if it's the current chat
-    if (activeChat && activeChat.id === chatId) {
-      setActiveChat(updatedChats.find(c => c.id === chatId));
+    // Cancel auto-delete timer if exists
+    if (autoDeleteTimers.current.has(messageId)) {
+      clearTimeout(autoDeleteTimers.current.get(messageId));
+      autoDeleteTimers.current.delete(messageId);
     }
+    
+    // Clean up message state
+    messageStates.current.delete(messageId);
+
+    deleteMessageInternal(chatId, messageId);
   };
 
   const markMessageAsRead = (chatId, messageId) => {
