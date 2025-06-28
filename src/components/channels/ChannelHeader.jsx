@@ -39,21 +39,34 @@ export default function ChannelHeader({
 }) {
   const [showMenu, setShowMenu] = useState(false);
 
+  const handleMenuClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Menu clicked, current state:', showMenu); // Debug log
+    setShowMenu(!showMenu);
+  };
+
+  const handleMenuItemClick = (action, label) => {
+    console.log('Menu item clicked:', label); // Debug log
+    setShowMenu(false);
+    action();
+  };
+
   const menuItems = [
     {
       icon: Info,
       label: 'Channel Info',
       action: () => {
+        console.log('Opening channel info'); // Debug log
         onOpenInfo();
-        setShowMenu(false);
       }
     },
     {
       icon: Settings,
       label: 'Channel Settings',
       action: () => {
+        console.log('Opening channel settings'); // Debug log
         onOpenSettings();
-        setShowMenu(false);
       }
     },
     {
@@ -64,7 +77,6 @@ export default function ChannelHeader({
           title: "🚧 Invite Members",
           description: "Member invitations aren't implemented yet—but don't worry! You can request them in your next prompt! 🚀"
         });
-        setShowMenu(false);
       }
     },
     {
@@ -75,7 +87,6 @@ export default function ChannelHeader({
           title: "🚧 Manage Permissions",
           description: "Permission management isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀"
         });
-        setShowMenu(false);
       }
     },
     {
@@ -86,7 +97,6 @@ export default function ChannelHeader({
           title: "🚧 Archive Channel",
           description: "Channel archiving isn't implemented yet—but don't worry! You can request it in your next prompt! 🚀"
         });
-        setShowMenu(false);
       }
     },
     {
@@ -97,7 +107,6 @@ export default function ChannelHeader({
           title: "Channel Reported",
           description: "This channel has been reported to moderators"
         });
-        setShowMenu(false);
       },
       destructive: true
     },
@@ -109,7 +118,6 @@ export default function ChannelHeader({
           title: "Left Channel",
           description: `You have left #${channel?.name}`
         });
-        setShowMenu(false);
         onBack();
       },
       destructive: true
@@ -186,47 +194,57 @@ export default function ChannelHeader({
           <Users className="w-4 h-4" />
         </Button>
         
-        {/* Menu Button with Dropdown */}
+        {/* FIXED: Menu Button with Proper Dropdown */}
         <div className="relative">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={handleMenuClick}
             className={`transition-all duration-200 hover:bg-accent ${showMenu ? 'bg-accent' : ''}`}
           >
             <MoreVertical className="w-4 h-4" />
           </Button>
 
-          {/* Dropdown Menu */}
+          {/* FIXED: Dropdown Menu with Proper Z-Index and Event Handling */}
           <AnimatePresence>
             {showMenu && (
               <>
-                {/* Backdrop to close menu */}
+                {/* Backdrop to close menu - CRITICAL: Proper z-index */}
                 <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setShowMenu(false)}
+                  className="fixed inset-0 z-[9998]" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Backdrop clicked, closing menu'); // Debug log
+                    setShowMenu(false);
+                  }}
                 />
                 
-                {/* Menu Content */}
+                {/* Menu Content - CRITICAL: Higher z-index than backdrop */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95, y: -10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -10 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 z-50 bg-card border border-border rounded-lg shadow-xl py-2 min-w-[200px] backdrop-blur-sm"
+                  className="absolute right-0 top-full mt-2 z-[9999] bg-card border border-border rounded-lg shadow-xl py-2 min-w-[200px] backdrop-blur-sm"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   {menuItems.map((item, index) => {
                     const Icon = item.icon;
                     return (
                       <button
                         key={index}
-                        onClick={item.action}
-                        className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors ${
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleMenuItemClick(item.action, item.label);
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2 text-sm hover:bg-accent transition-colors text-left ${
                           item.destructive ? 'text-destructive hover:text-destructive' : 'text-foreground'
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
-                        {item.label}
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        <span>{item.label}</span>
                       </button>
                     );
                   })}
